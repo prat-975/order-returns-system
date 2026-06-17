@@ -13,14 +13,22 @@
                     <h2><i class="bi bi-box-arrow-in-right text-primary"></i> Sign In</h2>
                 </div>
                 <div class="app-card-body">
+                    <div class="auth-status-banner success" th:if="${logoutSuccess}">
+                        <div class="auth-status-icon"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <p class="auth-status-title mb-0">Signed out successfully</p>
+                            <p class="auth-status-text mb-0">Your session has ended. Sign in again to continue.</p>
+                        </div>
+                    </div>
                     <div class="alert alert-danger py-2 small" th:if="${loginError}">
                         Invalid username or password.
                     </div>
-                    <div class="alert alert-success py-2 small" th:if="${logoutSuccess}">
-                        You have been logged out successfully.
-                    </div>
-                    <div class="alert alert-success py-2 small" th:if="${registerSuccess}">
-                        Account created! Please sign in.
+                    <div class="auth-status-banner success" th:if="${registerSuccess}">
+                        <div class="auth-status-icon"><i class="bi bi-person-check-fill"></i></div>
+                        <div>
+                            <p class="auth-status-title mb-0">Account created</p>
+                            <p class="auth-status-text mb-0">Please sign in with your new credentials.</p>
+                        </div>
                     </div>
 
                     <form th:action="@{/login}" method="post">

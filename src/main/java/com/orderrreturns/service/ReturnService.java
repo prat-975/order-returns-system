@@ -21,10 +21,10 @@ public class ReturnService {
 
     private static final int RETURN_WINDOW_DAYS = 30;
     private static final String REMARK_PENDING = "Awaiting admin review";
-    private static final String REMARK_APPROVED = "Return approved";
-    private static final String REMARK_WINDOW_EXPIRED = "Return window expired";
-    private static final String REMARK_DAMAGED = "Damaged item not eligible";
-    private static final String REMARK_ADMIN_REJECTED = "Rejected by admin review";
+    private static final String REMARK_APPROVED = "Your return has been approved";
+    private static final String REMARK_WINDOW_EXPIRED = "Return window exceeded 30 days — not eligible for return";
+    private static final String REMARK_DAMAGED = "Item condition is DAMAGED — not eligible for return";
+    private static final String REMARK_ADMIN_REJECTED = "Declined by admin review";
 
     private final ReturnRequestRepository returnRequestRepository;
 
@@ -57,7 +57,7 @@ public class ReturnService {
     public ReturnRequest rejectReturn(String id) {
         ReturnRequest request = findPendingRequest(id);
         request.setStatus(ReturnStatus.REJECTED);
-        request.setRemarks(REMARK_ADMIN_REJECTED);
+        request.setRemarks(resolveRejectionRemark(request));
         request.setReviewedAt(LocalDateTime.now());
         return returnRequestRepository.save(request);
     }
@@ -112,6 +112,50 @@ public class ReturnService {
 
     public int getReturnWindowDays() {
         return RETURN_WINDOW_DAYS;
+    }
+
+    public String resolveStatusMessage(ReturnRequest request) {
+        if (request.getStatus() == ReturnStatus.PENDING) {
+            return REMARK_PENDING;
+        }
+        if (request.getStatus() == ReturnStatus.APPROVED) {
+            return normalizeRemark(request.getRemarks(), REMARK_APPROVED);
+        }
+        ReturnEligibilityInsight insight = getEligibilityInsight(request);
+        if (insight.isWindowExpired()) {
+            return REMARK_WINDOW_EXPIRED;
+        }
+        if (insight.isDamagedItem()) {
+            return REMARK_DAMAGED;
+        }
+        if (request.getRemarks() != null && !request.getRemarks().isBlank()) {
+            return normalizeRemark(request.getRemarks(), REMARK_ADMIN_REJECTED);
+        }
+        return REMARK_ADMIN_REJECTED;
+    }
+
+    private String resolveRejectionRemark(ReturnRequest request) {
+        ReturnEligibilityInsight insight = getEligibilityInsight(request);
+        if (insight.isWindowExpired()) {
+            return REMARK_WINDOW_EXPIRED;
+        }
+        if (insight.isDamagedItem()) {
+            return REMARK_DAMAGED;
+        }
+        return REMARK_ADMIN_REJECTED;
+    }
+
+    private String normalizeRemark(String remarks, String fallback) {
+        if (remarks == null || remarks.isBlank()) {
+            return fallback;
+        }
+        return switch (remarks) {
+            case "Return window expired" -> REMARK_WINDOW_EXPIRED;
+            case "Damaged item not eligible" -> REMARK_DAMAGED;
+            case "Rejected by admin review" -> REMARK_ADMIN_REJECTED;
+            case "Return approved" -> REMARK_APPROVED;
+            default -> remarks;
+        };
     }
 
     public ReturnRequest getReturnById(String id, String username, boolean isAdmin) {

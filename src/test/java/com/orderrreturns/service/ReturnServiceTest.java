@@ -68,7 +68,7 @@ class ReturnServiceTest {
         ReturnRequest result = returnService.approveReturn("req-1");
 
         assertEquals(ReturnStatus.APPROVED, result.getStatus());
-        assertEquals("Return approved", result.getRemarks());
+        assertEquals("Your return has been approved", result.getRemarks());
     }
 
     @Test
@@ -80,7 +80,7 @@ class ReturnServiceTest {
         ReturnRequest result = returnService.approveReturn("req-1");
 
         assertEquals(ReturnStatus.APPROVED, result.getStatus());
-        assertEquals("Return approved", result.getRemarks());
+        assertEquals("Your return has been approved", result.getRemarks());
     }
 
     @Test
@@ -92,7 +92,7 @@ class ReturnServiceTest {
         ReturnRequest result = returnService.approveReturn("req-1");
 
         assertEquals(ReturnStatus.REJECTED, result.getStatus());
-        assertEquals("Damaged item not eligible", result.getRemarks());
+        assertEquals("Item condition is DAMAGED — not eligible for return", result.getRemarks());
     }
 
     @Test
@@ -104,7 +104,7 @@ class ReturnServiceTest {
         ReturnRequest result = returnService.approveReturn("req-1");
 
         assertEquals(ReturnStatus.REJECTED, result.getStatus());
-        assertEquals("Return window expired", result.getRemarks());
+        assertEquals("Return window exceeded 30 days — not eligible for return", result.getRemarks());
     }
 
     @Test
@@ -116,7 +116,19 @@ class ReturnServiceTest {
         ReturnRequest result = returnService.rejectReturn("req-1");
 
         assertEquals(ReturnStatus.REJECTED, result.getStatus());
-        assertEquals("Rejected by admin review", result.getRemarks());
+        assertEquals("Declined by admin review", result.getRemarks());
+    }
+
+    @Test
+    void rejectReturn_expiredWindow_shouldSetWindowExpiredRemark() {
+        ReturnRequest request = pendingRequest(LocalDate.now().minusDays(40), ItemCondition.NEW);
+        when(returnRequestRepository.findById("req-1")).thenReturn(Optional.of(request));
+        when(returnRequestRepository.save(any(ReturnRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ReturnRequest result = returnService.rejectReturn("req-1");
+
+        assertEquals(ReturnStatus.REJECTED, result.getStatus());
+        assertEquals("Return window exceeded 30 days — not eligible for return", result.getRemarks());
     }
 
     @Test
@@ -128,7 +140,7 @@ class ReturnServiceTest {
         returnService.evaluateReturnEligibility(request);
 
         assertEquals(ReturnStatus.REJECTED, request.getStatus());
-        assertEquals("Return window expired", request.getRemarks());
+        assertEquals("Return window exceeded 30 days — not eligible for return", request.getRemarks());
     }
 
     @Test
@@ -195,6 +207,36 @@ class ReturnServiceTest {
         assertTrue(insight.isWithinWindow());
         assertFalse(insight.hasEligibilityIssues());
         assertEquals(12, insight.getDaysSincePurchase());
+    }
+
+    @Test
+    void resolveStatusMessage_legacyWindowExpiredRemark_shouldReturnUserFriendlyMessage() {
+        ReturnRequest request = pendingRequest(LocalDate.now().minusDays(40), ItemCondition.NEW);
+        request.setStatus(ReturnStatus.REJECTED);
+        request.setRemarks("Return window expired");
+
+        assertEquals("Return window exceeded 30 days — not eligible for return",
+                returnService.resolveStatusMessage(request));
+    }
+
+    @Test
+    void resolveStatusMessage_adminRejectRemarkWithExpiredWindow_shouldPreferWindowMessage() {
+        ReturnRequest request = pendingRequest(LocalDate.now().minusDays(40), ItemCondition.NEW);
+        request.setStatus(ReturnStatus.REJECTED);
+        request.setRemarks("Declined by admin review");
+
+        assertEquals("Return window exceeded 30 days — not eligible for return",
+                returnService.resolveStatusMessage(request));
+    }
+
+    @Test
+    void resolveStatusMessage_rejectedWithoutRemarks_shouldInferFromEligibility() {
+        ReturnRequest request = pendingRequest(LocalDate.now().minusDays(40), ItemCondition.NEW);
+        request.setStatus(ReturnStatus.REJECTED);
+        request.setRemarks(null);
+
+        assertEquals("Return window exceeded 30 days — not eligible for return",
+                returnService.resolveStatusMessage(request));
     }
 
     private ReturnRequest pendingRequest(LocalDate purchaseDate, ItemCondition condition) {

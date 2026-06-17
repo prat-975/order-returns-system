@@ -28,7 +28,7 @@ public class DataInitializer implements CommandLineRunner {
      * All customer accounts must sign up via /register.
      */
     private void seedAdmin() {
-        if (!userRepository.existsByUsernameIgnoreCase("admin")) {
+        if (!userRepository.existsByUsername("admin")) {
             User admin = new User();
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin123"));

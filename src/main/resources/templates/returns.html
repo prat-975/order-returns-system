@@ -79,7 +79,7 @@
                     <th th:if="${isAdmin}">Window / Eligibility</th>
                     <th>Condition</th>
                     <th>Status</th>
-                    <th>Remarks</th>
+                    <th>Reason</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -105,7 +105,9 @@
                               th:classappend="${request.status.name() == 'APPROVED' ? 'approved' : (request.status.name() == 'PENDING' ? 'pending' : 'rejected')}"
                               th:text="${request.status}">PENDING</span>
                     </td>
-                    <td data-label="Remarks" class="text-muted small" th:text="${request.remarks}">Awaiting admin review</td>
+                    <td data-label="Reason"
+                        th:class="${request.status == T(com.orderrreturns.entity.ReturnStatus).REJECTED} ? 'rejection-remark' : 'text-muted small'"
+                        th:text="${statusMessages[request.id]}">Awaiting admin review</td>
                     <td class="actions-cell" data-label="">
                         <a th:href="@{/returns/{id}(id=${request.id})}" class="btn btn-sm"
                            th:classappend="${request.status.name() == 'PENDING' and isAdmin} ? 'btn-warning' : 'btn-outline-primary'">

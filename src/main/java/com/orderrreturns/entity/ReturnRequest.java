@@ -1,12 +1,16 @@
 package com.orderrreturns.entity;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.IndexDirection;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Document(collection = "return_requests")
+@CompoundIndex(name = "idx_submitted_by_created_at", def = "{'submittedBy': 1, 'createdAt': -1}")
 public class ReturnRequest {
 
     @Id
@@ -26,6 +30,7 @@ public class ReturnRequest {
 
     private String remarks;
 
+    @Indexed(direction = IndexDirection.DESCENDING)
     private LocalDateTime createdAt;
 
     private LocalDateTime reviewedAt;

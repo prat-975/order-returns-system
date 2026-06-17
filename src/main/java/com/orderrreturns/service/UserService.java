@@ -31,7 +31,7 @@ public class UserService {
     }
 
     public boolean usernameExists(String username) {
-        return userRepository.existsByUsernameIgnoreCase(normalizeUsername(username));
+        return userRepository.existsByUsername(normalizeUsername(username));
     }
 
     public boolean isReservedUsername(String username) {

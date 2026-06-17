@@ -75,6 +75,8 @@ public class ReturnController {
         model.addAttribute("returnRequest", returnRequest);
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("isPending", returnRequest.getStatus() == ReturnStatus.PENDING);
+        model.addAttribute("isRejected", returnRequest.getStatus() == ReturnStatus.REJECTED);
+        model.addAttribute("statusMessage", returnService.resolveStatusMessage(returnRequest));
         model.addAttribute("returnsListUrl", isAdmin ? "/returns" : "/my-returns");
         if (isAdmin) {
             model.addAttribute("eligibilityInsight", returnService.getEligibilityInsight(returnRequest));
@@ -107,6 +109,8 @@ public class ReturnController {
         model.addAttribute("approvedCount", countByStatus(returns, ReturnStatus.APPROVED));
         model.addAttribute("rejectedCount", countByStatus(returns, ReturnStatus.REJECTED));
         model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("statusMessages", returns.stream()
+                .collect(Collectors.toMap(ReturnRequest::getId, returnService::resolveStatusMessage)));
         if (isAdmin) {
             Map<String, ReturnEligibilityInsight> eligibilityInsights = returns.stream()
                     .collect(Collectors.toMap(ReturnRequest::getId, returnService::getEligibilityInsight));
