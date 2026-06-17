@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Return Status — Order Returns System')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar('')}"></div>
+
+<main class="container py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+
+            <div class="alert alert-success py-2 small" th:if="${reviewMessage}" th:text="${reviewMessage}"></div>
+
+            <div class="app-card">
+                <div class="status-hero">
+                    <div class="status-icon-wrap"
+                         th:classappend="${returnRequest.status.name() == 'APPROVED' ? 'approved' : (returnRequest.status.name() == 'PENDING' ? 'pending' : 'rejected')}">
+                        <i th:class="${returnRequest.status.name() == 'APPROVED' ? 'bi bi-check-lg' : (returnRequest.status.name() == 'PENDING' ? 'bi bi-hourglass-split' : 'bi bi-x-lg')}"></i>
+                    </div>
+                    <h2 th:text="${returnRequest.status.name() == 'APPROVED' ? 'Return Approved!' : (returnRequest.status.name() == 'PENDING' ? 'Awaiting Review' : 'Return Rejected')}">
+                        Awaiting Review
+                    </h2>
+                    <span class="status-badge-lg"
+                          th:classappend="${returnRequest.status.name() == 'APPROVED' ? 'approved' : (returnRequest.status.name() == 'PENDING' ? 'pending' : 'rejected')}"
+                          th:text="${returnRequest.status}">PENDING</span>
+                    <p class="text-muted mt-3 mb-0 small" th:text="${returnRequest.remarks}">Awaiting admin review</p>
+                    <p class="text-muted mt-2 mb-0 small" th:if="${isPending and !isAdmin}">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Your request has been submitted. An admin will review it shortly. Check back here or on My Returns for updates.
+                    </p>
+                </div>
+
+                <div class="detail-list">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-hash me-1"></i> Return ID</span>
+                        <span class="detail-value mono" th:text="${returnRequest.id}">abc123</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-receipt me-1"></i> Order ID</span>
+                        <span class="detail-value" th:text="${returnRequest.orderId}">ORD-1234</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-box-seam me-1"></i> Product</span>
+                        <span class="detail-value" th:text="${returnRequest.productName}">Product</span>
+                    </div>
+                    <div class="detail-row" th:if="${isAdmin}">
+                        <span class="detail-label"><i class="bi bi-person me-1"></i> Submitted By</span>
+                        <span class="detail-value" th:text="${returnRequest.submittedBy}">user</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar-event me-1"></i> Purchase Date</span>
+                        <span class="detail-value"
+                              th:text="${#temporals.format(returnRequest.purchaseDate, 'dd MMM yyyy')}">01 Jan 2026</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-chat-left-text me-1"></i> Return Reason</span>
+                        <span class="detail-value" th:text="${returnRequest.returnReason}">Reason</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-shield-check me-1"></i> Condition</span>
+                        <span class="detail-value">
+                            <span class="badge-condition"
+                                  th:classappend="${returnRequest.itemCondition.name()}"
+                                  th:text="${returnRequest.itemCondition}">NEW</span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar3 me-1"></i> Submitted</span>
+                        <span class="detail-value"
+                              th:text="${#temporals.format(returnRequest.createdAt, 'dd MMM yyyy, HH:mm')}">
+                            01 Jan 2026, 10:30
+                        </span>
+                    </div>
+                    <div class="detail-row" th:if="${returnRequest.reviewedAt != null}">
+                        <span class="detail-label"><i class="bi bi-patch-check me-1"></i> Reviewed</span>
+                        <span class="detail-value"
+                              th:text="${#temporals.format(returnRequest.reviewedAt, 'dd MMM yyyy, HH:mm')}">
+                            01 Jan 2026, 11:00
+                        </span>
+                    </div>
+                </div>
+
+                <div class="admin-review-panel" th:if="${isAdmin and isPending}">
+                    <h3><i class="bi bi-clipboard-check text-primary"></i> Review Request</h3>
+                    <div th:replace="~{fragments/layout :: eligibility-hints(${eligibilityInsight}, false)}"></div>
+                    <p class="text-muted small mb-3">
+                        <strong>Approve</strong> applies business rules automatically.
+                        <strong>Reject</strong> declines the request directly.
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <form th:action="@{/returns/{id}/approve(id=${returnRequest.id})}" method="post" class="flex-fill">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle me-1"></i> Approve &amp; Verify
+                            </button>
+                        </form>
+                        <form th:action="@{/returns/{id}/reject(id=${returnRequest.id})}" method="post" class="flex-fill">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="bi bi-x-circle me-1"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row justify-content-between gap-2 mt-4">
+                <a href="/" class="btn btn-outline-secondary" th:if="${!isAdmin}">
+                    <i class="bi bi-plus-circle me-1"></i> Submit Another Return
+                </a>
+                <a th:href="${returnsListUrl}" class="btn btn-primary" th:classappend="${isAdmin} ? 'w-100 w-sm-auto ms-sm-auto' : ''">
+                    <i class="bi bi-list-ul me-1"></i>
+                    <span th:text="${isAdmin} ? 'Back to Manage Returns' : 'My Returns'">My Returns</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

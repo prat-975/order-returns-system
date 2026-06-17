@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Login — Order Returns System')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar('login')}"></div>
+
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="app-card auth-card">
+                <div class="app-card-header text-center">
+                    <h2><i class="bi bi-box-arrow-in-right text-primary"></i> Sign In</h2>
+                </div>
+                <div class="app-card-body">
+                    <div class="alert alert-danger py-2 small" th:if="${loginError}">
+                        Invalid username or password.
+                    </div>
+                    <div class="alert alert-success py-2 small" th:if="${logoutSuccess}">
+                        You have been logged out successfully.
+                    </div>
+                    <div class="alert alert-success py-2 small" th:if="${registerSuccess}">
+                        Account created! Please sign in.
+                    </div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username"
+                                   placeholder="Enter username" required autofocus>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   placeholder="Enter password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                        </button>
+                    </form>
+
+                    <p class="text-center text-muted small mt-4 mb-0">
+                        New customer?
+                        <a href="/register">Create an account</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>
