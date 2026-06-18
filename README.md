@@ -92,8 +92,6 @@ You will be redirected to login if not authenticated.
 |------|----------|----------|
 | Admin | `admin` | `admin123` |
 
-> Change the admin password after first login in a production deployment.
-
 Customers are **not** pre-created. Every customer must **sign up** at `/register`.
 
 ### User vs Admin
