@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: user-return-system
+    runtime: docker
+    plan: free
+    healthCheckPath: /login
+    envVars:
+      - key: SPRING_DATA_MONGODB_URI
+        sync: false
+      - key: THYMELEAF_CACHE
+        value: "true"
